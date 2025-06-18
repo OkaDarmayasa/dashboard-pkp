@@ -218,18 +218,26 @@ def admin_view():
     }
 
     # Filters
-    with st.expander("🔍 Filter Jobs"):
+    with st.expander("🔍 Filter Jobs", expanded=True):
         unit_filter = st.multiselect("Filter by Unit", options=df["Unit"].unique())
         user_filter = st.multiselect("Filter by User", options=df["Username"].unique())
         date_range = st.date_input("Filter by Date", [])
+        validity_filter = st.selectbox("Filter by Validity", options=["All", "Valid", "Expired"])
 
         if unit_filter:
             df = df[df["Unit"].isin(unit_filter)]
         if user_filter:
             df = df[df["Username"].isin(user_filter)]
         if len(date_range) == 2:
-            df = df[(pd.to_datetime(df["Start Date"]) >= pd.to_datetime(date_range[0])) & 
-                    (pd.to_datetime(df["Start Date"]) <= pd.to_datetime(date_range[1]))]
+            df = df[
+                (pd.to_datetime(df["Start Date"], format='ISO8601') >= pd.to_datetime(date_range[0])) &
+                (pd.to_datetime(df["Start Date"], format='ISO8601') <= pd.to_datetime(date_range[1]))
+            ]
+        if validity_filter != "All":
+            if validity_filter == "Valid":
+                df = df[df["Validitas"].str.contains("Valid")]
+            else:
+                df = df[~df["Validitas"].str.contains("Valid")]
 
     # Show filtered result in interactive table
     with st.expander("📋 Job Table with Admin Actions", expanded=True):
