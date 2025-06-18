@@ -41,6 +41,20 @@ def add_job(user_id, job_name):
     conn.commit()
     conn.close()
 
+def delete_job(job_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM jobs WHERE id = ?", (job_id,))
+    conn.commit()
+    conn.close()
+
+def update_job(job_id, new_start_date):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("UPDATE jobs SET start_date = ? WHERE id = ?", (new_start_date, job_id))
+    conn.commit()
+    conn.close()
+
 def get_user_jobs(user_id):
     conn = get_connection()
     c = conn.cursor()
