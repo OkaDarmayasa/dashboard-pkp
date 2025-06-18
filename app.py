@@ -57,8 +57,8 @@ with st.sidebar:
 # Stage validity thresholds
 stage_limits = {
     "Perencanaan": 7,
-    "Pelaksanaan": 14,
-    "Pelaporan": 7,
+    "Pelaksanaan": 21,
+    "Pelaporan": 28,
     "Selesai": None  # Always valid
 }
 
@@ -189,8 +189,8 @@ def admin_view():
     # Stage duration limits in days
     stage_limits = {
         "Perencanaan": 7,
-        "Pelaksanaan": 14,
-        "Pelaporan": 7,
+        "Pelaksanaan": 21,
+        "Pelaporan": 28,
         "Selesai": None  # always valid
     }
 
