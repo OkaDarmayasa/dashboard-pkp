@@ -2,7 +2,8 @@ import streamlit as st
 from db import get_user
 
 def login():
-    with st.sidebar.header("Login"):
+    with st.sidebar:
+        st.write("Login")
         username = st.sidebar.text_input("Username")
         password = st.sidebar.text_input("Password", type="password")
         if st.sidebar.button("Login"):
