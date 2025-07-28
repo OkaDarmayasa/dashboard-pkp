@@ -1,4 +1,3 @@
--- Users Table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
@@ -6,13 +5,13 @@ CREATE TABLE IF NOT EXISTS users (
     unit TEXT NOT NULL,
     is_admin BOOLEAN DEFAULT 0
 );
+DROP TABLE IF EXISTS Indikator;
 
--- Jobs Table
-CREATE TABLE IF NOT EXISTS jobs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    job_name TEXT NOT NULL,
-    current_stage TEXT DEFAULT 'Perencanaan',
-    start_date TEXT NOT NULL,
-    FOREIGN KEY(user_id) REFERENCES users(id)
+CREATE TABLE IF NOT EXISTS Indikator (
+    indikator TEXT UNIQUE NOT NULL,
+    capaian TEXT NOT NULL,
+    kategori TEXT NOT NULL,
+    nilai TEXT NOT NULL,      -- JSON stored as TEXT
+    year INTEGER NOT NULL,
+    bukti TEXT NOT NULL
 );
