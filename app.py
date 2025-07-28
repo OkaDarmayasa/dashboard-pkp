@@ -13,6 +13,16 @@ st.set_page_config(layout="wide")
 file_path = "Ready to Prisma.xlsx"
 seed_indikators_from_excel(file_path)
 
+def format_capaian(value):
+    try:
+        val = float(value)
+        if 0 <= val <= 1:
+            return f"{val * 100:.0f}%"   # turn 0.87 → 87%
+        else:
+            return f"{val:.0f}" if val.is_integer() else str(val)
+    except:
+        return str(value)
+
 # Authentication
 if 'user' not in st.session_state:
     login()
@@ -75,6 +85,12 @@ def user_view():
         df = pd.DataFrame(data, columns=[
             "Name", "Capaian", "Kategori", "Nilai", "Year", "Bukti"
         ])
+        df.index = df.index + 1
+        df["Capaian"] = df["Capaian"].apply(format_capaian)
+        df["Nilai"] = df["Nilai"].apply(lambda x: json.loads(x)[0] if isinstance(x, str) else x)
+        search_query = st.text_input("🔍 Search", "")
+        if search_query:
+            df = df[df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)]
         st.dataframe(df)
     else:
         st.info("Belum ada indikator.")
@@ -91,7 +107,9 @@ def admin_view():
     df = pd.DataFrame(data, columns=[
         "Name", "Capaian", "Kategori", "Nilai", "Year", "Bukti"
     ])
-
+    df.index = df.index + 1
+    df["Capaian"] = df["Capaian"].apply(format_capaian)
+    df["Nilai"] = df["Nilai"].apply(lambda x: json.loads(x)[0] if isinstance(x, str) else x)
     # ── Filter Section ──
     with st.expander("🔍 Filter Indikator", expanded=True):
         selected_years = st.multiselect("Filter Tahun", sorted(df["Year"].unique()))
@@ -102,8 +120,13 @@ def admin_view():
         if selected_kategori:
             df = df[df["Kategori"].isin(selected_kategori)]
 
+
     # ── Data Table ──
     with st.expander("📋 Tabel Indikator", expanded=True):
+        search_query = st.text_input("🔍 Search", "")
+        if search_query:
+            df = df[df.apply(lambda row: row.astype(str).str.contains(search_query, case=False).any(), axis=1)]
+
         st.dataframe(df)
 
     # ── Charts ──
