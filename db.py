@@ -15,7 +15,7 @@ def seed_indikators_from_excel(excel_path):
         conn.close()
     
     df = pd.read_excel(excel_path, index_col=None)
-    df = df.reset_index(drop=True)  # Remove any implicit index as a column
+    df = df.reset_index(drop=True)
 
     df.columns = [col.strip().lower().replace(" ", "_") for col in df.columns]
 
@@ -30,7 +30,6 @@ def seed_indikators_from_excel(excel_path):
             nilai_raw = row.get("nilai", "")
             year = int(row.get("year", 2025))
             bukti = str(row.get("bukti", "")).strip()
-            type_ = str(row.get("type", "custom")).strip()
 
             try:
                 nilai = json.dumps(json.loads(nilai_raw))
@@ -58,11 +57,7 @@ def seed_indikators_from_excel(excel_path):
     conn.close()
     print("✅ Seeding complete.")
 
-# Run the seeder
-seed_indikators_from_excel("Ready to Prisma.xlsx")
-
 # ─── USER FUNCTIONS ──────────────────────────────────────────────────────────
-
 def add_user(username, password, unit, is_admin=False):
     conn = get_connection()
     c = conn.cursor()

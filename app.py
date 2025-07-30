@@ -1,52 +1,126 @@
 import streamlit as st
 from db import *
 from auth import login
+from custom_pages import indikator, tlhp 
 import pandas as pd
 import plotly.express as px
 import json
 import time
 from datetime import datetime
+import plotly.graph_objects as go
 
-st.set_page_config(layout="wide")
+# Set page config with title and icon if desired
+st.set_page_config(
+    page_title="Dashboard Tau Kawan",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        "About": None,
+        "Get help": None,
+        "Report a bug": None
+    }
+)
 
-# Initialize DB
-file_path = "Ready to Prisma.xlsx"
-seed_indikators_from_excel(file_path)
+# ─────────────────────── CUSTOM CSS ────────────────────────
+# This CSS will set the background color of the entire app to a dark blue
+# st.markdown(
+#     """
+#     <style>
+#     /* Main background: light gray */
+#     html, body, [data-testid="stAppViewContainer"],
+#     .stApp, .block-container, [data-testid="stHeader"] {
+#         background-color: #D1D5DB !important;
+#         color: #111827 !important;  /* Dark text */
+#     }
 
-def format_capaian(value):
-    try:
-        val = float(value)
-        if 0 <= val <= 1:
-            return f"{val * 100:.0f}%"   # turn 0.87 → 87%
-        else:
-            return f"{val:.0f}" if val.is_integer() else str(val)
-    except:
-        return str(value)
+#     /* Sidebar: dark blue */
+#     [data-testid="stSidebar"] {
+#         background-color: #023047 !important;
+#         color: white !important;
+#     }
 
-# Authentication
+#     /* Sidebar text */
+#     [data-testid="stSidebar"] * {
+#         color: white !important;
+#     }
+
+#     /* Fix labels and general text in main area */
+#     .block-container label,
+#     .block-container h1, .block-container h2, .block-container h3,
+#     .block-container h4, .block-container h5, .block-container h6,
+#     .block-container p, .block-container div {
+#         color: #111827 !important;
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True
+# )
+
+# # ─── DATABASE INIT ─────────────────────────────────────────
+# file_path = "Ready to Prisma.xlsx"
+# seed_indikators_from_excel(file_path)
+
+# ─── AUTHENTICATION ────────────────────────────────────────
 if 'user' not in st.session_state:
     login()
     st.stop()
 
 user = st.session_state.user
-st.title(f"Selamat Datang, {user['username']}!")
+
+# Function to draw full-width sidebar buttons
+def sidebar_nav_button(label, page_name):
+    if st.button(label, use_container_width=True):
+        st.session_state.selected_page = page_name
 
 # ─── SIDEBAR ───────────────────────────────────────────────
-with st.sidebar:
-    st.markdown("### 👤 User Info")
-    st.markdown(f"**Username:** {user['username']}")
-    st.markdown(f"**Unit:** {user['unit']}")
-    if user["is_admin"]:
-        st.markdown("**Role:** Admin")
+def sidebar():
+    with st.sidebar:
+        # Centered image using columns
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            st.image("assets/logo.png", width=100)  # Set desired width here
 
-    st.markdown("---")
-    if st.button("🚪 Logout"):
-        st.session_state.pop("user")
-        st.rerun()
+        # Centered title
+        st.markdown(
+            """
+            <div style='text-align: center; font-size: 20px; font-weight: bold; margin-top: 0px;'>
+                Dashboard Tau Kawan
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
+        st.markdown("---")
+
+        # Initialize session state for page selection
+        if "selected_page" not in st.session_state:
+            st.session_state.selected_page = "Dashboard"
+
+        # Menu buttons
+        sidebar_nav_button("🏠  Dashboard", "Dashboard")
+        sidebar_nav_button("📊  21 Indikator", "21 Indikator")
+        sidebar_nav_button("📁  TLHP", "TLHP")
+
+        st.markdown("---")
+
+        # Logout button
+        if st.button("🚪 Logout"):
+            st.session_state.pop("user")
+            st.rerun()
+
+def format_capaian(value):
+    try:
+        val = float(value)
+        if 0 <= val <= 1:
+            return f"{val * 100:.0f}%" 
+        else:
+            return f"{val:.0f}" if val.is_integer() else str(val)
+    except:
+        return str(value)
+    
 # ─── USER VIEW ─────────────────────────────────────────────
-
 def user_view():
+    sidebar()
     st.header("📌 Tambah Indikator Baru")
 
     if "indikator_success" not in st.session_state:
@@ -97,7 +171,8 @@ def user_view():
 
 # ─── ADMIN VIEW ────────────────────────────────────────────
 def admin_view():
-    st.header("📋 Semua Indikator")
+    sidebar()
+    st.header("Dashboard Tau Kawan")
 
     data = get_all_indikators()
     if not data:
@@ -138,11 +213,11 @@ def admin_view():
 
     # Custom color mapping
     custom_colors = {
-        "Sangat Baik": "#2ca02c",     # Green
-        "Baik": "#98df8a",            # Light Green
-        "Cukup": "#ffbb78",           # Orange
-        "Kurang": "#ff7f0e",          # Dark Orange
-        "Sangat Kurang": "#d62728",   # Red
+        "Sangat Baik": "#6FFFE9",     # Green
+        "Baik": "#2BB7DA",            # Light Green
+        "Cukup": "#4682B4",           # Orange
+        "Kurang": "#2F4F4F",          # Dark Orange
+        "Sangat Kurang": "#5C4FC8",   # Red
     }
 
     # Generate pie chart
@@ -154,11 +229,25 @@ def admin_view():
         hole=0.4
     )
 
-    # Apply manual colors based on kategori
-    fig_kategori_pie.update_traces(marker=dict(colors=[custom_colors.get(k, "#cccccc") for k in kategori_counts["Kategori"]]))
+    # Apply styling and colors
+    fig_kategori_pie.update_traces(
+        textinfo="label+percent",
+        textposition="outside",
+        marker=dict(colors=[custom_colors.get(k, "#cccccc") for k in kategori_counts["Kategori"]]),
+        hoverinfo="label+percent+value",
+        showlegend=True
+    )
 
+    # Layout tweaks
+    fig_kategori_pie.update_layout(
+        annotations=[dict(text='Kategori', x=0.5, y=0.5, font_size=16, showarrow=False)],
+        showlegend=True,
+        margin=dict(t=40, b=40, l=0, r=0),
+        font=dict(size=16)
+    )
+
+    # Display in Streamlit
     st.plotly_chart(fig_kategori_pie, use_container_width=True)
-
 # ─── ENTRY POINT ───────────────────────────────────────────
 
 if user["is_admin"]:
