@@ -10,7 +10,7 @@ def get_connection():
 def seed_indikators_from_excel(excel_path):
     with open('schema.sql', 'r') as f:
         conn = get_connection()
-        conn.executescript(f.read())
+        conn.executescrizpt(f.read())
         conn.commit()
         conn.close()
     
@@ -59,63 +59,95 @@ def seed_indikators_from_excel(excel_path):
 
 # ─── USER FUNCTIONS ──────────────────────────────────────────────────────────
 def add_user(username, password, unit, is_admin=False):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute(
-        "INSERT INTO users (username, password, unit, is_admin) VALUES (?, ?, ?, ?)", 
-        (username, password, unit, is_admin)
-    )
-    conn.commit()
-    conn.close()
+    try:
+        with get_connection() as conn:
+            conn.execute(
+                "INSERT INTO users (username, password, unit, is_admin) VALUES (?, ?, ?, ?)",
+                (username, password, unit, is_admin)
+            )
+        return True
+    except sqlite3.IntegrityError as e:
+        print(f"Integrity error: {e}")
+        return False
+    except Exception as e:
+        print(f"Error adding user: {e}")
+        return False
 
 def get_user(username, password):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
-    return c.fetchone()
+    try:
+        with get_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, password))
+            return c.fetchone()
+    except Exception as e:
+        print(f"Error fetching user: {e}")
+        return None
 
 def get_all_users():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM users")
-    return c.fetchall()
+    try:
+        with get_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM users")
+            return c.fetchall()
+    except Exception as e:
+        print(f"Error fetching all users: {e}")
+        return []
 
 # ─── INDIKATOR FUNCTIONS ─────────────────────────────────────────────────────
 
 def add_indikator(name, capaian, kategori, nilai, year, bukti):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""
-        INSERT INTO Indikator (name, capaian, kategori, nilai,  year, bukti)
-        VALUES (?, ?, ?, ?, ?, ?)
-    """, (name, capaian, kategori, json.dumps(nilai), year, bukti))
-    conn.commit()
-    conn.close()
+    try:
+        with get_connection() as conn:
+            conn.execute("""
+                INSERT INTO Indikator (name, capaian, kategori, nilai, year, bukti)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (name, capaian, kategori, json.dumps(nilai), year, bukti))
+        return True
+    except Exception as e:
+        print(f"Error adding indikator: {e}")
+        return False
 
 def get_all_indikators():
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM Indikator")
-    return c.fetchall()
+    try:
+        with get_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM Indikator")
+            return c.fetchall()
+    except Exception as e:
+        print(f"Error fetching all indikators: {e}")
+        return []
 
 def get_indikator_by_id(indikator_id):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM Indikator WHERE id = ?", (indikator_id,))
-    return c.fetchone()
+    try:
+        with get_connection() as conn:
+            c = conn.cursor()
+            c.execute("SELECT * FROM Indikator WHERE id = ?", (indikator_id,))
+            return c.fetchone()
+    except Exception as e:
+        print(f"Error fetching indikator by ID: {e}")
+        return None
 
 def update_indikator(indikator_id, name, capaian, kategori, nilai, year, bukti):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""
-        UPDATE Indikator
-        SET name = ?, capaian = ?, kategori = ?, nilai = ?, year = ?, bukti = ?
-        WHERE id = ?
-    """, (name, capaian, kategori, json.dumps(nilai), year, bukti, indikator_id))
-    conn.commit()
-    conn.close()
+    try:
+        with get_connection() as conn:
+            conn.execute("""
+                UPDATE Indikator
+                SET name = ?, capaian = ?, kategori = ?, nilai = ?, year = ?, bukti = ?
+                WHERE id = ?
+            """, (name, capaian, kategori, json.dumps(nilai), year, bukti, indikator_id))
+        return True
+    except Exception as e:
+        print(f"Error updating indikator: {e}")
+        return False
 
 def delete_indikator(indikator_id):
+    try:
+        with get_connection() as conn:
+            conn.execute("DELETE FROM Indikator WHERE id = ?", (indikator_id,))
+        return True
+    except Exception as e:
+        print(f"Error deleting indikator: {e}")
+        return False
     conn = get_connection()
     c = conn.cursor()
     c.execute("DELETE FROM Indikator WHERE id = ?", (indikator_id,))
